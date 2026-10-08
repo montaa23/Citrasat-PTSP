@@ -44,6 +44,9 @@ canvas{width:100%;max-width:700px;height:auto;display:block;border:1px solid var
   <label>Tanggal</label><input type="date" id="date">
   <div class="row"><div style="flex:1"><label>Jam</label><input type="time" id="time" value="17:00"></div>
   <div style="flex:1"><label>Zona waktu</label><select id="tz"><option>WIB</option><option>WITA</option><option>WIT</option></select></div></div>
+  <label>Ukuran font judul: <span id="tv">otomatis</span></label>
+  <label style="font-weight:400;display:flex;gap:6px;align-items:center;margin:0 0 4px"><input type="checkbox" id="ta" checked> Otomatis (menyesuaikan lebar frame)</label>
+  <input type="range" id="ts" min="9" max="24" step="0.5" value="16" disabled>
   <label>Yang digeser dengan mouse/jari</label>
   <div class="seg"><button id="mBox" class="on">Kotak ungu</button><button id="mImg">Gambar</button></div>
   <label>Ukuran kotak ungu</label><input type="range" id="bs" min="20" max="140" value="50">
@@ -80,12 +83,13 @@ function fit(){const z=$('zm').value/100;const sw=crop?crop.sw:img.width,sh=crop
  ox=Math.min(0,Math.max(IMG.w-w,ox));oy=Math.min(0,Math.max(IMG.h-h,oy));return{w,h}}
 let fnEdited=false;
 function draw(){
+ $('ts').disabled=$('ta').checked;$('tv').textContent=$('ta').checked?'otomatis':$('ts').value+' px';
  if(!fnEdited)$('fn').value=fname().replace(/\.png$/,'');
  ctx.setTransform(S,0,0,S,0,0);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
  ctx.strokeStyle='#000';ctx.lineWidth=1;ctx.strokeRect(.5,.5,W-1,FH-1);
  ctx.beginPath();ctx.moveTo(0,36.5);ctx.lineTo(W,36.5);ctx.stroke();
  ctx.fillStyle='#000';ctx.textBaseline='middle';ctx.textAlign='center';const tx=title();ctx.font='bold 10px "Times New Roman",serif';
- const fs=Math.min(21,10*(W-30)/Math.max(1,ctx.measureText(tx).width));ctx.font='bold '+fs.toFixed(1)+'px "Times New Roman",serif';ctx.fillText(tx,W/2,19);ctx.textAlign='left';
+ const fit=10*(W-30)/Math.max(1,ctx.measureText(tx).width);const fs=$('ta').checked?Math.min(21,fit):Math.min(+$('ts').value,fit);ctx.font='bold '+fs.toFixed(1)+'px "Times New Roman",serif';ctx.fillText(tx,W/2,19);ctx.textAlign='left';
  ctx.save();ctx.beginPath();ctx.rect(IMG.x,IMG.y,IMG.w,IMG.h);ctx.clip();
  if(img){const f=fit();const c=crop||{sx:0,sy:0,sw:img.width,sh:img.height};ctx.drawImage(img,c.sx,c.sy,c.sw,c.sh,IMG.x+ox,IMG.y+oy,f.w,f.h)}
  ctx.restore();ctx.strokeRect(IMG.x-.5,IMG.y-.5,IMG.w+1,IMG.h+1);
@@ -114,7 +118,7 @@ cv.addEventListener('pointermove',e=>{if(!drag)return;const p=pos(e),dx=p.x-drag
 cv.addEventListener('pointerup',()=>{drag=null;save()});
 function setMode(m){mode=m;$('mBox').classList.toggle('on',m==='box');$('mImg').classList.toggle('on',m==='img')}
 $('mBox').onclick=()=>setMode('box');$('mImg').onclick=()=>setMode('img');
-['date','time','tz','bs','zm','lg'].forEach(id=>$(id).addEventListener('input',()=>{draw();save()}));
+['date','time','tz','bs','zm','lg','ta','ts'].forEach(id=>$(id).addEventListener('input',()=>{draw();save()}));
 function load(f){if(!f||!f.type.startsWith('image/'))return;const u=URL.createObjectURL(f),i=new Image();
  i.onload=()=>{img=i;crop=null;$('cropPanel').hidden=true;ox=oy=0;$('zm').value=100;$('drop').textContent='✓ '+(f.name||'gambar dari clipboard')+' (klik untuk ganti)';draw()};i.src=u}
 $('drop').onclick=()=>$('file').click();$('file').onchange=e=>load(e.target.files[0]);
